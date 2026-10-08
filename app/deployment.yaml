@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aks-platform-demo
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: aks-platform-demo
+  template:
+    metadata:
+      labels:
+        app: aks-platform-demo
+        azure.workload.identity/use: "true"
+    spec:
+      serviceAccountName: aks-platform-demo-sa
+
+      containers:
+        - name: aks-platform-demo
+          image: acrappae001rkb.azurecr.io/aks-platform-demo:v1
+          ports:
+            - containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: aks-platform-demo
+spec:
+  selector:
+    app: aks-platform-demo
+  ports:
+    - port: 80
+      targetPort: 8080
+  type: ClusterIP

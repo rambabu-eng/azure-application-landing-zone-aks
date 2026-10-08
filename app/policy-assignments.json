@@ -1,0 +1,1 @@
+D:\Terraform project\azure-application-landing-zone-aks\app>  "C:\Program Files\Microsoft SDKs\Azure\CLI2\wbin\\..\python.exe" -IBm azure.cli policy assignment list --management-group online --filter atScope() --output json

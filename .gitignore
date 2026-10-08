@@ -1,0 +1,33 @@
+# Terraform working directory
+.terraform/
+
+# Terraform state
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+
+# Terraform plan files
+*.tfplan
+
+# Local variable files
+*.tfvars
+*.tfvars.json
+
+# Temporary/debug output
+plan-check.txt
+*.out
+*.log
+
+# Temporary workload identity / Key Vault test scripts
+wi-test.py
+kv-create.py
+kv-list.py
+kv-read.py
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+evidence/logs/
