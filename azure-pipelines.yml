@@ -1,0 +1,63 @@
+trigger:
+  branches:
+    include:
+      - main
+
+pr:
+  branches:
+    include:
+      - main
+
+pool:
+  vmImage: windows-latest
+
+variables:
+  TF_VAR_location: 'australiaeast'
+  TF_VAR_resource_group_name: 'rg-app-aks-network-australiaeast-001'
+  TF_VAR_vnet_name: 'vnet-app-aks-australiaeast'
+  TF_VAR_vnet_address_space: '["10.10.0.0/16"]'
+
+stages:
+- stage: TerraformPlan
+  displayName: Terraform CI and Plan
+
+  jobs:
+  - job: TerraformPlan
+    displayName: Validate and Plan
+    steps:
+
+    - checkout: self
+
+    - template: .pipelines/helpers/terraform-installer.yaml
+      parameters:
+        terraformVersion: 'latest'
+
+    - pwsh: |
+        terraform fmt -check -recursive
+      displayName: Terraform Format Check
+
+    - template: .pipelines/helpers/terraform-init.yaml
+      parameters:
+        serviceConnection: 'sc-alz-app-plan'
+        backendAzureSubscriptionId: '6dc86c77-8ac3-49aa-9753-027ac2ed3154'
+        backendAzureResourceGroupName: 'rg-alz-mgmt-state-australiaeast-001'
+        backendAzureStorageAccountName: 'stoalzmgmaus001vdrb'
+        backendAzureStorageAccountContainerName: 'mgmt-tfstate'
+        backendAzureStorageAccountContainerKeyName: 'azure-application-landing-zone-aks.tfstate'
+        root_module_folder_relative_path: '.'
+
+    - pwsh: |
+        terraform validate
+      displayName: Terraform Validate
+
+    - template: .pipelines/helpers/terraform-plan.yaml
+      parameters:
+        terraform_action: 'apply'
+        serviceConnection: 'sc-alz-app-plan'
+        root_module_folder_relative_path: '.'
+
+    - task: PublishPipelineArtifact@1
+      displayName: Publish Terraform Plan
+      inputs:
+        targetPath: '$(System.DefaultWorkingDirectory)/tfplan'
+        artifact: 'terraform-plan'

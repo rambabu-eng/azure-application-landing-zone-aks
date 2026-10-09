@@ -31,3 +31,5 @@ kv-read.py
 Thumbs.db
 
 evidence/logs/
+
+fic-*.json
