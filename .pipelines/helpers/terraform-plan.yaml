@@ -45,4 +45,9 @@ steps:
         & $command $arguments
 
     env:
-      TERRAFORM_ACTION: ${{ coalesce(parameters.terraform_action, 'apply') }}
+    TERRAFORM_ACTION: ${{ coalesce(parameters.terraform_action, 'apply') }}
+
+    TF_VAR_location: $(TF_VAR_location)
+    TF_VAR_resource_group_name: $(TF_VAR_resource_group_name)
+    TF_VAR_vnet_name: $(TF_VAR_vnet_name)
+    TF_VAR_vnet_address_space: $(TF_VAR_vnet_address_space)
