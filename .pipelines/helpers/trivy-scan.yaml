@@ -2,6 +2,10 @@
 parameters:
   - name: imageName
 
+  - name: serviceConnection
+
+  - name: acrName
+
 steps:
   - bash: |
       docker build \
@@ -23,6 +27,15 @@ steps:
         --ignore-unfixed \
         --exit-code 1 \
         ${{ parameters.imageName }}
-    displayName: Trivy container vulnerability scan 
-    
-    
+    displayName: Trivy container vulnerability scan
+
+  - task: AzureCLI@2
+    displayName: Push validated image to ACR
+    inputs:
+      azureSubscription: ${{ parameters.serviceConnection }}
+      scriptType: bash
+      scriptLocation: inlineScript
+      inlineScript: |
+        az acr login --name ${{ parameters.acrName }}
+
+        docker push ${{ parameters.imageName }}

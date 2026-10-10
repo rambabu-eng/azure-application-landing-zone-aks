@@ -82,4 +82,71 @@ stages:
 
     - template: .pipelines/helpers/trivy-scan.yaml
       parameters:
-        imageName: 'aks-platform-demo:$(Build.BuildId)'
+        imageName: 'acrappae001rkb.azurecr.io/aks-platform-demo:$(Build.BuildId)'
+        serviceConnection: 'sc-alz-app-apply'
+        acrName: 'acrappae001rkb'
+
+        - stage: DeployToAKS
+  displayName: Deploy Validated Image to AKS
+  dependsOn: ContainerSecurity
+
+  jobs:
+  - job: Deploy
+    displayName: Deploy application to private AKS
+
+    pool:
+      vmImage: ubuntu-latest
+
+    steps:
+    - task: AzureCLI@2
+      displayName: Start AKS if stopped
+      inputs:
+        azureSubscription: 'sc-alz-app-apply'
+        scriptType: bash
+        scriptLocation: inlineScript
+        inlineScript: |
+          RG="rg-app-aks-network-australiaeast-001"
+          CLUSTER="aks-app-australiaeast-001"
+
+          STATE=$(az aks show \
+            --resource-group "$RG" \
+            --name "$CLUSTER" \
+            --query powerState.code \
+            -o tsv)
+
+          echo "Current AKS power state: $STATE"
+
+          if [ "$STATE" = "Stopped" ]; then
+            echo "Starting AKS cluster..."
+            az aks start \
+              --resource-group "$RG" \
+              --name "$CLUSTER"
+          else
+            echo "AKS is already running."
+          fi
+
+    - task: AzureCLI@2
+      displayName: Deploy validated image to AKS
+      inputs:
+        azureSubscription: 'sc-alz-app-apply'
+        scriptType: bash
+        scriptLocation: inlineScript
+        inlineScript: |
+          RG="rg-app-aks-network-australiaeast-001"
+          CLUSTER="aks-app-australiaeast-001"
+          IMAGE="acrappae001rkb.azurecr.io/aks-platform-demo:$(Build.BuildId)"
+
+          az aks command invoke \
+            --resource-group "$RG" \
+            --name "$CLUSTER" \
+            --command "kubectl set image deployment/aks-platform-demo aks-platform-demo=$IMAGE"
+
+          az aks command invoke \
+            --resource-group "$RG" \
+            --name "$CLUSTER" \
+            --command "kubectl rollout status deployment/aks-platform-demo --timeout=180s"
+
+          az aks command invoke \
+            --resource-group "$RG" \
+            --name "$CLUSTER" \
+            --command "kubectl get pods -l app=aks-platform-demo -o wide"
