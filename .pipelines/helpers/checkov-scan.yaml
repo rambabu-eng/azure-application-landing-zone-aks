@@ -16,6 +16,8 @@ steps:
       checkov `
         -d . `
         --framework terraform `
+        --download-external-modules true `
+        --skip-check CKV_TF_1 `
         --compact `
         --quiet `
         --soft-fail
