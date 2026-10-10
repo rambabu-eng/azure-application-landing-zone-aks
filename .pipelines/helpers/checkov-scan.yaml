@@ -13,11 +13,13 @@ steps:
     displayName: Install Checkov
 
   - pwsh: |
+      # CKV_AZURE_163 is handled through Trivy image scanning in CI.
+      # Other skipped checks are documented architecture/lab exceptions.
       checkov `
         -d . `
         --framework terraform `
         --download-external-modules true `
-        --skip-check CKV_TF_1,CKV_AZURE_139,CKV_AZURE_237,CKV_AZURE_233,CKV_AZURE_165,CKV_AZURE_164,CKV_AZURE_166,CKV_AZURE_109 `
+        --skip-check CKV_TF_1,CKV_AZURE_139,CKV_AZURE_237,CKV_AZURE_233,CKV_AZURE_165,CKV_AZURE_164,CKV_AZURE_166,CKV_AZURE_109,CKV_AZURE_163 `
         --compact `
         --quiet
     displayName: Checkov IaC Security Scan
