@@ -35,3 +35,5 @@ evidence/logs/
 fic-*.json
 
 .checkov-venv/
+
+.external_modules/
