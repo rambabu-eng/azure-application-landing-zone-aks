@@ -1,0 +1,28 @@
+---
+parameters:
+  - name: imageName
+
+steps:
+  - bash: |
+      docker build \
+        -t ${{ parameters.imageName }} \
+        -f app/dockerfile \
+        app
+    displayName: Build application container image
+
+  - bash: |
+      curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh \
+        | sudo sh -s -- -b /usr/local/bin v0.75.0
+
+      trivy --version
+    displayName: Install Trivy
+
+  - bash: |
+      trivy image \
+        --severity HIGH,CRITICAL \
+        --ignore-unfixed \
+        --exit-code 1 \
+        ${{ parameters.imageName }}
+    displayName: Trivy container vulnerability scan 
+    
+    
