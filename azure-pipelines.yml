@@ -50,6 +50,8 @@ stages:
         terraform validate
       displayName: Terraform Validate
 
+    - template: .pipelines/helpers/checkov-scan.yaml
+
     - template: .pipelines/helpers/terraform-plan.yaml
       parameters:
         terraform_action: 'apply'

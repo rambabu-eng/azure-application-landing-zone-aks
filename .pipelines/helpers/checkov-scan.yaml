@@ -1,0 +1,22 @@
+---
+steps:
+  - task: UsePythonVersion@0
+    displayName: Use Python 3.12
+    inputs:
+      versionSpec: '3.12'
+
+  - pwsh: |
+      python --version
+      python -m pip install --upgrade pip
+      python -m pip install checkov
+      checkov --version
+    displayName: Install Checkov
+
+  - pwsh: |
+      checkov `
+        -d . `
+        --framework terraform `
+        --compact `
+        --quiet `
+        --soft-fail
+    displayName: Checkov IaC Security Scan

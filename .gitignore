@@ -33,3 +33,5 @@ Thumbs.db
 evidence/logs/
 
 fic-*.json
+
+.checkov-venv/
