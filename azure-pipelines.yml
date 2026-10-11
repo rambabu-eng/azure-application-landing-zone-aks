@@ -86,7 +86,8 @@ stages:
         serviceConnection: 'sc-alz-app-apply'
         acrName: 'acrappae001rkb'
 
-        - stage: DeployToAKS
+
+- stage: DeployToAKS
   displayName: Deploy Validated Image to AKS
   dependsOn: ContainerSecurity
 
