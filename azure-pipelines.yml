@@ -87,8 +87,6 @@ stages:
         acrName: 'acrappae001rkb'
 
 - stage: DeployToAKS
-- stage: DeployToAKS
-  origin/main
   displayName: Deploy Validated Image to AKS
   dependsOn: ContainerSecurity
 
