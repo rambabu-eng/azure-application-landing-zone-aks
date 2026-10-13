@@ -113,6 +113,21 @@ module "hub_spoke_peering" {
   reverse_use_remote_gateways          = false
 }
 
+resource "azurerm_log_analytics_workspace" "aks" {
+  name                = "law-aks-app-australiaeast-001"
+  location            = var.location
+  resource_group_name = module.resource_group.name
+
+  sku               = "PerGB2018"
+  retention_in_days = 30
+}
+
+resource "azurerm_monitor_workspace" "aks" {
+  name                = "amw-aks-app-australiaeast-001"
+  location            = var.location
+  resource_group_name = module.resource_group.name
+}
+
 module "aks" {
   source  = "Azure/avm-res-containerservice-managedcluster/azurerm"
   version = "0.8.3"
@@ -127,6 +142,25 @@ module "aks" {
   addon_profile_azure_policy = {
     enabled = true
   }
+
+  addon_profile_oms_agent = {
+    enabled = true
+
+    config = {
+      log_analytics_workspace_resource_id = azurerm_log_analytics_workspace.aks.id
+      use_aad_auth                        = true
+    }
+  }
+
+  azure_monitor_profile = {
+    metrics = {
+      enabled = true
+    }
+  }
+
+  onboard_monitoring = true
+
+  prometheus_workspace_id = azurerm_monitor_workspace.aks.id
 
   api_server_access_profile = {
     enable_private_cluster = true

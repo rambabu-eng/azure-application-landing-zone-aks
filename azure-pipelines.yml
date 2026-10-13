@@ -64,6 +64,51 @@ stages:
       inputs:
         targetPath: '$(System.DefaultWorkingDirectory)/tfplan'
         artifact: 'terraform-plan'
+- stage: TerraformApply
+  displayName: Controlled Terraform Apply
+  dependsOn: TerraformPlan
+
+  # Never apply infrastructure from a PR.
+  # Apply only after the change has been merged to main.
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+
+  jobs:
+  - deployment: TerraformApply
+    displayName: Apply approved Terraform plan
+
+    environment: 'alz-app-infrastructure-prod'
+
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - checkout: self
+
+          - template: .pipelines/helpers/terraform-installer.yaml
+            parameters:
+              terraformVersion: 'latest'
+
+          - task: DownloadPipelineArtifact@2
+            displayName: Download Terraform Plan
+            inputs:
+              artifact: 'terraform-plan'
+              path: '$(System.DefaultWorkingDirectory)'
+
+          - template: .pipelines/helpers/terraform-init.yaml
+            parameters:
+              serviceConnection: 'sc-alz-app-apply'
+              backendAzureSubscriptionId: '6dc86c77-8ac3-49aa-9753-027ac2ed3154'
+              backendAzureResourceGroupName: 'rg-alz-mgmt-state-australiaeast-001'
+              backendAzureStorageAccountName: 'stoalzmgmaus001vdrb'
+              backendAzureStorageAccountContainerName: 'mgmt-tfstate'
+              backendAzureStorageAccountContainerKeyName: 'azure-application-landing-zone-aks.tfstate'
+              root_module_folder_relative_path: '.'
+
+          - template: .pipelines/helpers/terraform-apply.yaml
+            parameters:
+              terraform_action: 'apply'
+              serviceConnection: 'sc-alz-app-apply'
+              root_module_folder_relative_path: '.'
 
 
 - stage: ContainerSecurity
@@ -88,7 +133,12 @@ stages:
 
 - stage: DeployToAKS
   displayName: Deploy Validated Image to AKS
-  dependsOn: ContainerSecurity
+
+  dependsOn:
+    - TerraformApply
+    - ContainerSecurity
+
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
 
   jobs:
   - job: Deploy
