@@ -128,6 +128,80 @@ resource "azurerm_monitor_workspace" "aks" {
   resource_group_name = module.resource_group.name
 }
 
+resource "azurerm_monitor_alert_prometheus_rule_group" "aks_workload" {
+  name                = "amprg-aks-app-australiaeast-001"
+  location            = var.location
+  resource_group_name = module.resource_group.name
+  cluster_name        = module.aks.name
+
+  scopes = [
+    azurerm_monitor_workspace.aks.id
+  ]
+
+  description        = "Prometheus alert rules for AKS application workload"
+  interval           = "PT1M"
+  rule_group_enabled = true
+
+  rule {
+    alert   = "KubePodContainerRestart"
+    enabled = true
+
+    expression = <<-EOT
+      increase(kube_pod_container_status_restarts_total{namespace="default",container="aks-platform-demo"}[5m]) > 0
+    EOT
+
+    for      = "PT1M"
+    severity = 2
+
+    annotations = {
+      summary     = "AKS application container restarted"
+      description = "aks-platform-demo has restarted during the last five minutes."
+    }
+
+    alert_resolution {
+      auto_resolved   = true
+      time_to_resolve = "PT5M"
+    }
+  }
+
+  rule {
+    alert   = "AKSApplicationHighCPU"
+    enabled = true
+
+    expression = <<-EOT
+      (
+        sum by (namespace, pod, container) (
+          rate(container_cpu_usage_seconds_total{
+            namespace="default",
+            container="aks-platform-demo"
+          }[5m])
+        )
+        /
+        sum by (namespace, pod, container) (
+          kube_pod_container_resource_limits{
+            namespace="default",
+            container="aks-platform-demo",
+            resource="cpu"
+          }
+        )
+      ) > 0.8
+    EOT
+
+    for      = "PT5M"
+    severity = 2
+
+    annotations = {
+      summary     = "AKS application CPU usage is high"
+      description = "aks-platform-demo is using more than 80 percent of its configured CPU limit for five minutes."
+    }
+
+    alert_resolution {
+      auto_resolved   = true
+      time_to_resolve = "PT5M"
+    }
+  }
+}
+
 module "aks" {
   source  = "Azure/avm-res-containerservice-managedcluster/azurerm"
   version = "0.8.3"
