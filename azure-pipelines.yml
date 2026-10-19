@@ -2,11 +2,21 @@ trigger:
   branches:
     include:
       - main
+  paths:
+    exclude:
+      - README.md
+      - architecture/**
+      - evidence/**
 
 pr:
   branches:
     include:
       - main
+  paths:
+    exclude:
+      - README.md
+      - architecture/**
+      - evidence/**
 
 pool:
   vmImage: windows-latest
@@ -114,6 +124,7 @@ stages:
 - stage: ContainerSecurity
   displayName: Container Build and Security Scan
   dependsOn: TerraformPlan
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
 
   jobs:
   - job: BuildAndScan
