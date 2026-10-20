@@ -6,6 +6,7 @@ trigger:
     exclude:
       - README.md
       - architecture/**
+      - docs/**
       - evidence/**
 
 pr:
@@ -16,7 +17,14 @@ pr:
     exclude:
       - README.md
       - architecture/**
+      - docs/**
       - evidence/**
+
+parameters:
+- name: deployInfrastructure
+  displayName: Deploy infrastructure and application
+  type: boolean
+  default: false
 
 pool:
   vmImage: windows-latest
@@ -80,7 +88,7 @@ stages:
 
   # Never apply infrastructure from a PR.
   # Apply only after the change has been merged to main.
-  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'), ${{ eq(parameters.deployInfrastructure, true) }})
 
   jobs:
   - deployment: TerraformApply
@@ -124,7 +132,7 @@ stages:
 - stage: ContainerSecurity
   displayName: Container Build and Security Scan
   dependsOn: TerraformPlan
-  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'), ${{ eq(parameters.deployInfrastructure, true) }})
 
   jobs:
   - job: BuildAndScan
@@ -149,7 +157,7 @@ stages:
     - TerraformApply
     - ContainerSecurity
 
-  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'), ${{ eq(parameters.deployInfrastructure, true) }})
 
   jobs:
   - job: Deploy
