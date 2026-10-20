@@ -155,6 +155,12 @@ Supporting screenshots and validation outputs are available in the `evidence/` d
 - Observability should be validated with real workload telemetry, not just by confirming that monitoring resources exist.
 - Controlled teardown is part of operational discipline and cost management for non-production environments.
 
+## Engineering Learnings
+
+Detailed troubleshooting, failure handling, root-cause analysis, and operational lessons are documented here:
+
+[Engineering Troubleshooting & Learnings](docs/engineering-troubleshooting.md)
+
 ## Project Outcome
 
 The project delivered a secure and governed Azure AKS application landing zone with Infrastructure as Code, controlled DevSecOps delivery, secretless workload authentication, Kubernetes workload hardening, and Azure-native observability.
